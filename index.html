@@ -417,6 +417,7 @@ function guardarMedicion() {
 }
 
 function eliminar(id) {
+  if (!confirm('¿Eliminar esta medición?')) return;
   registros = registros.filter(r => r.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
   render();
