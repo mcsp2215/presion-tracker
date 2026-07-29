@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presión en Calma</title>
+<style>
+  :root {
+    --purple: #2D1B4E;
+    --purple-light: #4A2F7A;
+    --purple-pale: #F3F0F9;
+    --green: #2E7D32;
+    --yellow: #B8860B;
+    --orange: #D97706;
+    --red: #C0392B;
+    --red-dark: #8E1A0F;
+    --gray: #6B7280;
+    --border: #E5E0F0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #FAFAFC;
+    color: #1F1B2E;
+    margin: 0;
+    padding: 16px;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+  h1 {
+    font-size: 20px;
+    color: var(--purple);
+    margin: 4px 0 4px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 16px;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--purple-light);
+    margin: 0 0 12px;
+  }
+  .row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .field { flex: 1; }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--gray);
+    margin-bottom: 4px;
+  }
+  input[type=number], input[type=time], input[type=date] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px;
+    background: var(--purple-pale);
+  }
+  .tag-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tag-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 6px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .tag-btn.active {
+    border-color: var(--purple);
+    background: var(--purple);
+    color: white;
+    font-weight: 600;
+  }
+  .tag-hint {
+    font-size: 10px;
+    color: var(--gray);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .tag-btn.active .tag-hint {
+    color: rgba(255,255,255,0.75);
+  }
+  .med-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 12px;
+    background: var(--purple-pale);
+    padding: 8px 10px;
+    border-radius: 8px;
+  }
+  .med-check input { width: 18px; height: 18px; }
+  button.primary {
+    width: 100%;
+    padding: 13px;
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.primary:active { background: var(--purple-light); }
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+  }
+  .filter-chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: white;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    color: var(--gray);
+  }
+  .filter-chip.active {
+    background: var(--purple);
+    color: white;
+    border-color: var(--purple);
+  }
+  .entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry-left { display: flex; flex-direction: column; }
+  .entry-vals { font-size: 17px; font-weight: 700; }
+  .entry-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--gray);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .summary-box {
+    background: var(--purple-pale);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+  .summary-box .label { font-size: 11px; color: var(--gray); margin-bottom: 2px; }
+  .summary-box .value { font-size: 15px; font-weight: 700; color: var(--purple); }
+  canvas { width: 100%; max-height: 180px; }
+  .empty-state {
+    text-align: center;
+    color: var(--gray);
+    font-size: 13px;
+    padding: 20px 0;
+  }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    background: var(--purple-pale);
+    resize: vertical;
+  }
+  .btn-secondary {
+    width: 100%;
+    padding: 10px;
+    background: white;
+    color: var(--purple);
+    border: 1.5px solid var(--purple);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .copy-msg {
+    font-size: 12px;
+    color: var(--green);
+    text-align: center;
+    margin-top: 6px;
+    height: 14px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🩺 Presión en Calma</h1>
+
+<!-- INDICACIONES -->
+<div class="card" style="background:var(--purple-pale); border-color:var(--purple-light);">
+  <details>
+    <summary style="cursor:pointer; font-size:14px; letter-spacing:0.02em; color:var(--purple); font-weight:600;">📋 Indicaciones</summary>
+    <div style="font-size:13px; line-height:1.6; margin-top:10px;">
+      <strong>🌅 Mañana:</strong> antes del café y meds<br>
+      <strong>🌙 Noche:</strong> en reposo · no justo después de deporte/ducha<br><br>
+      <strong>Buenas prácticas:</strong>
+      <ul style="margin:6px 0 0 18px; padding:0;">
+        <li>Brazalete altura corazón, 1-2 cm sobre pliegue del codo</li>
+        <li>Sentado, espalda apoyada, pies en el suelo</li>
+        <li>Brazo apoyado a la altura del corazón</li>
+        <li>5 minutos de reposo previo, sin hablar</li>
+        <li>Toma 2 mediciones (1 min de diferencia) y anota el promedio</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- FORMULARIO -->
+<div class="card">
+  <h2>Nueva medición</h2>
+  <div class="row">
+    <div class="field">
+      <label>Sistólica (arriba)</label>
+      <input type="number" id="sys" placeholder="120" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Diastólica (abajo)</label>
+      <input type="number" id="dia" placeholder="80" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Pulso (lpm)</label>
+      <input type="number" id="pulso" placeholder="70" inputmode="numeric">
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" id="fecha">
+    </div>
+    <div class="field">
+      <label>Hora</label>
+      <input type="time" id="hora">
+    </div>
+  </div>
+
+  <label>Contexto de la medición</label>
+  <div class="tag-group" id="tagGroup">
+    <div class="tag-btn" data-tag="manana">🌅 Mañana<div class="tag-hint">7:15</div></div>
+    <div class="tag-btn" data-tag="noche">🌙 Noche<div class="tag-hint">22:30</div></div>
+    <div class="tag-btn" data-tag="ejercicio">🎾 Post-ejercicio</div>
+    <div class="tag-btn" data-tag="otro">⚡ Otro</div>
+  </div>
+
+  <div class="med-check">
+    <input type="checkbox" id="medTomado">
+    <label for="medTomado" style="margin:0;">Ya tomé mi meds hoy</label>
+  </div>
+
+  <button class="primary" onclick="guardarMedicion()">Guardar medición</button>
+</div>
+
+<!-- RESUMEN -->
+<div class="card" id="resumenCard" style="display:none;">
+  <h2>Resumen últimos 7 días</h2>
+  <div class="summary-grid">
+    <div class="summary-box">
+      <div class="label">🌅 Promedio mañana</div>
+      <div class="value" id="avgManana">–</div>
+    </div>
+    <div class="summary-box">
+      <div class="label">🌙 Promedio noche</div>
+      <div class="value" id="avgNoche">–</div>
+    </div>
+  </div>
+  <button class="btn-secondary" onclick="generarResumenTexto()">📋 Generar resumen para el médico</button>
+  <textarea id="resumenTexto" style="display:none; margin-top:10px;" readonly></textarea>
+  <button class="btn-secondary" id="copyBtn" style="display:none;" onclick="copiarResumen()">Copiar texto</button>
+  <div class="copy-msg" id="copyMsg"></div>
+</div>
+
+<!-- GRAFICO -->
+<div class="card">
+  <h2>Tendencia</h2>
+  <div class="filter-row">
+    <div class="filter-chip active" data-filter="todos">Todos</div>
+    <div class="filter-chip" data-filter="manana">Mañana</div>
+    <div class="filter-chip" data-filter="noche">Noche</div>
+    <div class="filter-chip" data-filter="ejercicio">Post-ejercicio</div>
+  </div>
+  <canvas id="chart"></canvas>
+</div>
+
+<!-- HISTORIAL -->
+<div class="card">
+  <h2>Historial</h2>
+  <div id="historial"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'presion_registros_v2';
+let registros = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let selectedTag = null;
+let currentFilter = 'todos';
+
+// Set fecha/hora actual por defecto
+document.getElementById('fecha').valueAsDate = new Date();
+const now = new Date();
+document.getElementById('hora').value = now.toTimeString().slice(0,5);
+
+// Tag selection
+document.querySelectorAll('.tag-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedTag = btn.dataset.tag;
+  });
+});
+
+// Filter chips
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    render();
+  });
+});
+
+function clasificar(sys, dia) {
+  if (sys >= 180 || dia >= 120) return { texto: 'Crisis hipertensiva', color: 'var(--red-dark)' };
+  if (sys >= 140 || dia >= 90) return { texto: 'Hipertensión etapa 2', color: 'var(--red)' };
+  if (sys >= 130 || dia >= 80) return { texto: 'Hipertensión etapa 1', color: 'var(--orange)' };
+  if (sys >= 120) return { texto: 'Elevada', color: 'var(--yellow)' };
+  return { texto: 'Normal', color: 'var(--green)' };
+}
+
+function tagLabel(tag) {
+  return { manana: '🌅 Mañana', noche: '🌙 Noche', ejercicio: '🎾 Post-ejercicio', otro: '⚡ Otro' }[tag] || '';
+}
+
+function guardarMedicion() {
+  const sys = parseInt(document.getElementById('sys').value);
+  const dia = parseInt(document.getElementById('dia').value);
+  const pulso = parseInt(document.getElementById('pulso').value) || null;
+  const fecha = document.getElementById('fecha').value;
+  const hora = document.getElementById('hora').value;
+  const medTomado = document.getElementById('medTomado').checked;
+
+  if (!sys || !dia) {
+    alert('Ingresa ambos valores de presión.');
+    return;
+  }
+  if (dia >= sys) {
+    alert('La diastólica (abajo) no puede ser mayor o igual que la sistólica (arriba). Revisa los valores.');
+    return;
+  }
+  if (!selectedTag) {
+    alert('Selecciona el contexto de la medición (mañana, noche, etc.)');
+    return;
+  }
+
+  registros.push({
+    id: Date.now(),
+    sys, dia, pulso, fecha, hora,
+    tag: selectedTag,
+    medTomado
+  });
+  registros.sort((a,b) => new Date(a.fecha+'T'+a.hora) - new Date(b.fecha+'T'+b.hora));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+
+  // reset form
+  document.getElementById('sys').value = '';
+  document.getElementById('dia').value = '';
+  document.getElementById('pulso').value = '';
+  document.getElementById('medTomado').checked = false;
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+  selectedTag = null;
+
+  render();
+}
+
+function eliminar(id) {
+  registros = registros.filter(r => r.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+  render();
+}
+
+function renderHistorial() {
+  const cont = document.getElementById('historial');
+  if (registros.length === 0) {
+    cont.innerHTML = '<div class="empty-state">Aún no hay mediciones registradas.</div>';
+    return;
+  }
+  const ordenado = [...registros].reverse();
+  cont.innerHTML = ordenado.map(r => {
+    const c = clasificar(r.sys, r.dia);
+    const fechaFmt = new Date(r.fecha + 'T' + r.hora).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+    return `
+      <div class="entry">
+        <div class="entry-left">
+          <div class="entry-vals">${r.sys}/${r.dia}${r.pulso ? ` <span style="font-size:12px; font-weight:500; color:var(--gray);">· ${r.pulso} lpm</span>` : ''}</div>
+          <div class="entry-meta">${fechaFmt} · ${r.hora} · ${tagLabel(r.tag)}${r.medTomado ? ' · 💊' : ''}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge" style="background:${c.color}">${c.texto}</span>
+          <button class="del-btn" onclick="eliminar(${r.id})">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderResumen() {
+  const card = document.getElementById('resumenCard');
+  if (registros.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  const sieteAtras = new Date();
+  sieteAtras.setDate(sieteAtras.getDate() - 7);
+
+  const recientes = registros.filter(r => new Date(r.fecha) >= sieteAtras);
+  const manana = recientes.filter(r => r.tag === 'manana');
+  const noche = recientes.filter(r => r.tag === 'noche');
+
+  document.getElementById('avgManana').textContent = promedio(manana);
+  document.getElementById('avgNoche').textContent = promedio(noche);
+}
+
+function promedio(arr) {
+  if (arr.length === 0) return '–';
+  const sys = Math.round(arr.reduce((s,r) => s + r.sys, 0) / arr.length);
+  const dia = Math.round(arr.reduce((s,r) => s + r.dia, 0) / arr.length);
+  const conPulso = arr.filter(r => r.pulso);
+  if (conPulso.length > 0) {
+    const pulso = Math.round(conPulso.reduce((s,r) => s + r.pulso, 0) / conPulso.length);
+    return `${sys}/${dia} · ${pulso} lpm`;
+  }
+  return `${sys}/${dia}`;
+}
+
+function generarResumenTexto() {
+  const sieteAtras = new Date();
+  sieteAtras.setDate(sieteAtras.getDate() - 7);
+  const recientes = registros.filter(r => new Date(r.fecha) >= sieteAtras)
+    .sort((a,b) => new Date(a.fecha+'T'+a.hora) - new Date(b.fecha+'T'+b.hora));
+
+  if (recientes.length === 0) {
+    alert('No hay mediciones en los últimos 7 días.');
+    return;
+  }
+
+  const manana = recientes.filter(r => r.tag === 'manana');
+  const noche = recientes.filter(r => r.tag === 'noche');
+  const ejercicio = recientes.filter(r => r.tag === 'ejercicio');
+
+  let texto = `RESUMEN DE PRESIÓN ARTERIAL - Últimos 7 días\n`;
+  texto += `Generado: ${new Date().toLocaleDateString('es-CL')}\n\n`;
+  texto += `Promedio mañana (${manana.length} mediciones): ${promedio(manana)}\n`;
+  texto += `Promedio noche (${noche.length} mediciones): ${promedio(noche)}\n`;
+  if (ejercicio.length) texto += `Promedio post-ejercicio (${ejercicio.length} mediciones): ${promedio(ejercicio)}\n`;
+  texto += `\nDETALLE:\n`;
+  recientes.forEach(r => {
+    const fechaFmt = new Date(r.fecha + 'T' + r.hora).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+    texto += `${fechaFmt} ${r.hora} - ${r.sys}/${r.dia}${r.pulso ? ` (${r.pulso} lpm)` : ''} - ${tagLabel(r.tag)}${r.medTomado ? ' (medicamento tomado)' : ''}\n`;
+  });
+  texto += `\nMedicación actual: Amicardis (telmisartán/amlodipino) 80/5mg, Atorvastatina 10mg`;
+
+  const area = document.getElementById('resumenTexto');
+  area.value = texto;
+  area.style.display = 'block';
+  document.getElementById('copyBtn').style.display = 'block';
+}
+
+function copiarResumen() {
+  const area = document.getElementById('resumenTexto');
+  area.select();
+  document.execCommand('copy');
+  const msg = document.getElementById('copyMsg');
+  msg.textContent = '✓ Copiado al portapapeles';
+  setTimeout(() => msg.textContent = '', 2000);
+}
+
+function renderChart() {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 180 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = 180;
+  ctx.clearRect(0, 0, W, H);
+
+  let datos = registros;
+  if (currentFilter !== 'todos') {
+    datos = registros.filter(r => r.tag === currentFilter);
+  }
+  datos = datos.slice(-14); // últimas 14
+
+  if (datos.length === 0) {
+    ctx.fillStyle = '#9CA3AF';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('No hay datos para este filtro', W/2, H/2);
+    return;
+  }
+
+  const padding = { top: 15, bottom: 25, left: 32, right: 10 };
+  const chartW = W - padding.left - padding.right;
+  const chartH = H - padding.top - padding.bottom;
+
+  const allVals = datos.flatMap(r => [r.sys, r.dia]);
+  const minV = Math.min(...allVals, 60) - 5;
+  const maxV = Math.max(...allVals, 140) + 5;
+
+  function x(i) { return padding.left + (i / Math.max(datos.length - 1, 1)) * chartW; }
+  function y(v) { return padding.top + chartH - ((v - minV) / (maxV - minV)) * chartH; }
+
+  // grid lines
+  ctx.strokeStyle = '#E5E0F0';
+  ctx.lineWidth = 1;
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#9CA3AF';
+  [minV, (minV+maxV)/2, maxV].forEach(v => {
+    const yy = y(v);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, yy);
+    ctx.lineTo(W - padding.right, yy);
+    ctx.stroke();
+    ctx.fillText(Math.round(v), 2, yy + 3);
+  });
+
+  // umbral 140/90 y 120/80 reference lines
+  function refLine(val, color) {
+    const yy = y(val);
+    ctx.strokeStyle = color;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, yy);
+    ctx.lineTo(W - padding.right, yy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  refLine(140, 'rgba(192,57,43,0.3)');
+  refLine(90, 'rgba(217,119,6,0.3)');
+
+  // línea sistólica
+  drawLine(datos.map((r,i) => [x(i), y(r.sys)]), '#2D1B4E');
+  // línea diastólica
+  drawLine(datos.map((r,i) => [x(i), y(r.dia)]), '#8B7BAA');
+
+  function drawLine(points, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    points.forEach(([px,py], i) => i === 0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py));
+    ctx.stroke();
+    points.forEach(([px,py]) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  // eje x labels (primer y último)
+  ctx.fillStyle = '#9CA3AF';
+  ctx.textAlign = 'left';
+  ctx.fillText(new Date(datos[0].fecha).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'}), padding.left, H - 6);
+  ctx.textAlign = 'right';
+  ctx.fillText(new Date(datos[datos.length-1].fecha).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'}), W - padding.right, H - 6);
+
+  // leyenda
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#2D1B4E';
+  ctx.fillText('● Sistólica', padding.left, 12);
+  ctx.fillStyle = '#8B7BAA';
+  ctx.fillText('● Diastólica', padding.left + 70, 12);
+}
+
+function render() {
+  renderHistorial();
+  renderResumen();
+  renderChart();
+}
+
+window.addEventListener('resize', renderChart);
+render();
+</script>
+
+</body>
+</html>
